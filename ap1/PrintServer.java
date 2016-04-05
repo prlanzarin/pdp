@@ -1,46 +1,63 @@
-package pdp;
-
 import java.util.ArrayList;
-import java.util.List;
 
 public class PrintServer implements Runnable {
 
-	Impressora impressora;
-	int packetSize;  
-	int pendingRequests;
+    Impressora impressora;
+    int packetSize;  
+    ArrayList<Integer> pendingRequests;
 
-	public PrintServer(int p, Impressora i) {
-		this.packetSize = p;
-		this.impressora = i;
-		this.pendingRequests = 0;
-	}
+    public PrintServer(int p, Impressora i) {
+        this.packetSize = p;
+        this.impressora = i;
+        this.pendingRequests = new ArrayList(0);
+    }
 
-	public synchronized boolean jobRequest() {
-		if(!this.impressora.isAble())
-			return false;
+    public synchronized boolean jobRequest(int userId) {
+        if(!this.impressora.isAble())
+            return false;
 
-		this.pendingRequests++;
+        this.pendingRequests.add(userId);
+        System.out.println("Queue size: " + this.pendingRequests.size());
 
-		return true;
-	}
+        return true;
+    }
 
-	@Override
-		public void run() {
-			// fica na main	
-			while(this.impressora.isAble()) {
-				if(this.pendingRequests >= this.packetSize) {
-					this.pendingRequests -= packetSize;
-					this.impressora.printJobs();
-					System.out.println("PrintServer is sending a packet to the printer...\n");
-					try {
-						this.wait();
-					} catch (InterruptedException e) {
-						return null;
-					}
-					System.out.println("PrintServer is free again, requeuing jobs...\n");
-					this.pendingRequests += packetSize;	
-				}
-			}
-		}
+    public void sendPacket() {
+
+        System.out.println("PrintServer is sending a packet to the printer...\n");
+        this.impressora.printJobs(this);
+
+        synchronized(this){
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
+
+        System.out.println("PrintServer is free again, requeuing jobs...\n");
+
+    }
+
+    @Override
+    public void run() {
+        System.out.println("PrintServer is ON.\n");
+
+        while(this.impressora.isAble()) {
+
+            System.out.println("ola");
+            if(this.pendingRequests.size() >= this.packetSize) {
+                ArrayList<Integer> printingJobs = new ArrayList(10);
+
+                for(int i = 0; i < packetSize; i++)
+                    printingJobs.add(this.pendingRequests.remove(0));
+
+                this.sendPacket();                
+
+                for(int i = 0; i < packetSize; i++) 
+                    this.pendingRequests.add(printingJobs.remove(0));
+            }
+        }
+    }
 
 }
