@@ -6,11 +6,13 @@ public class Impressora implements Runnable {
 	int maxPressTime; // Java time
 	int maxPress;
 	int nofPrints;
+    boolean busy;
 
 	public Impressora(int mt, int x) {
 		this.maxPressTime = mt;
 		this.maxPress = x;
         this.nofPrints = 0;
+        this.busy = false;
 	}
 
 	public int getMaxPressTime() {
@@ -21,26 +23,35 @@ public class Impressora implements Runnable {
 		return this.maxPress;
 	}
 
-	public boolean printJobs(PrintServer ps) {
-		// sleep nofJobs * 5s
-		// return etc
-        synchronized(ps) {
-            System.out.println("Printer is printing a packet...\n");
-            try {
-                Thread.sleep(this.maxPressTime*1000);
-            } catch (InterruptedException e) {return false;}
-            this.nofPrints++;
-            System.out.println("Printer is done...\n");
-            notifyAll();
+    public boolean printJobs() {
+        // sleep nofJobs * 5s
+        // return etc
+        if(isAble()) {
+            synchronized(this) {
+                System.out.println("Printer is printing a packet...\n");
+                try {
+                    this.nofPrints++;
+                    busy = true;
+                    Thread.sleep(this.maxPressTime*100);
+                    busy = false;
+                } catch (InterruptedException e) {return false;}
+                System.out.println("Printer is done." + " It can handle " +
+                        (this.maxPress - this.nofPrints) + " more jobs.");
+            }
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public boolean isAble() {
-        if((this.maxPress - this.nofPrints) <= 0)
-            return false;
-        return true;
+        if((this.maxPress - this.nofPrints) > 0)
+            return true;
+        return false;
+    }
+    
+    public boolean isBusy() {
+        return this.busy;
     }
 
     @Override

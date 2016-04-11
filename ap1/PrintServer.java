@@ -25,15 +25,12 @@ public class PrintServer implements Runnable {
     public void sendPacket() {
 
         System.out.println("PrintServer is sending a packet to the printer...\n");
-        this.impressora.printJobs(this);
 
-        synchronized(this){
-            try {
-                this.wait();
-            } catch (InterruptedException e) {
-                return;
+        synchronized(impressora){
+                System.out.println("Waiting for printer...");
+                this.impressora.printJobs();
+                System.out.println("Server woke up...");
             }
-        }
 
         System.out.println("PrintServer is free again, requeuing jobs...\n");
 
@@ -44,9 +41,7 @@ public class PrintServer implements Runnable {
         System.out.println("PrintServer is ON.\n");
 
         while(this.impressora.isAble()) {
-
-            System.out.println("ola");
-            if(this.pendingRequests.size() >= this.packetSize) {
+            if(this.pendingRequests.size() >= this.packetSize && !impressora.isBusy()) {
                 ArrayList<Integer> printingJobs = new ArrayList(10);
 
                 for(int i = 0; i < packetSize; i++)
@@ -58,6 +53,8 @@ public class PrintServer implements Runnable {
                     this.pendingRequests.add(printingJobs.remove(0));
             }
         }
+
+        System.out.println("TEST");
     }
 
 }
