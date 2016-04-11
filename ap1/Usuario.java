@@ -9,15 +9,22 @@ public class Usuario implements Runnable{
         this.id = id;
         this.printServer = printServer;
         this.models = 0;
-    }
-
-    public void newModel() {
-        this.models++;
+	printServer.incrementInstances();
     }
 
     @Override // thread
         public void run() {
-            System.out.println("User " + this.id + " is sending a job request");
-            this.printServer.jobRequest(this.id);
+
+		try {
+			Main.loading.acquire();
+
+		} catch (InterruptedException e) {
+			return ;
+		}
+            	this.printServer.jobRequest(this.id);
+		Main.loading.release();	
+
+            	System.out.println("User " + this.id + " sent a job request");
+
         }
 }

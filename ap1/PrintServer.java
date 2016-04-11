@@ -1,60 +1,84 @@
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 public class PrintServer implements Runnable {
 
-    Impressora impressora;
-    int packetSize;  
-    ArrayList<Integer> pendingRequests;
+	Impressora impressora;
+	private int packetSize;  
+	ArrayList<Integer> pendingRequests;
+	private static int nOfInstances;
+	
+	public PrintServer(int p, Impressora i) {
+		this.packetSize = p;
+		this.impressora = i;
+		this.pendingRequests = new ArrayList(0);
+		this.nOfInstances = 0;
+	}
 
-    public PrintServer(int p, Impressora i) {
-        this.packetSize = p;
-        this.impressora = i;
-        this.pendingRequests = new ArrayList(0);
-    }
+	public synchronized int incrementInstances() {
+		return this.nOfInstances++;
+	}
 
-    public synchronized boolean jobRequest(int userId) {
-        if(!this.impressora.isAble())
-            return false;
+	public boolean jobRequest(int userId)  {
+		if(!this.impressora.isAble())
+			return false;
 
-        this.pendingRequests.add(userId);
-        System.out.println("Queue size: " + this.pendingRequests.size());
+		this.pendingRequests.add(userId);
 
-        return true;
-    }
+		System.out.println("SERVER queued a request");
 
-    public void sendPacket() {
+		return true;
+	}
 
-        System.out.println("PrintServer is sending a packet to the printer...\n");
+	public void sendPacket() {
 
-        synchronized(impressora){
-                System.out.println("Waiting for printer...");
-                this.impressora.printJobs();
-                System.out.println("Server woke up...");
-            }
+		System.out.println("PrintServer is sending a packet to the printer...\n");
+		System.out.println(pendingRequests);
+		try {
+			Main.sendingPacket.acquire();	
+		} catch (InterruptedException e) {
+			return;
+		}
+		this.impressora.printJobs();
+		Main.sendingPacket.release();
 
-        System.out.println("PrintServer is free again, requeuing jobs...\n");
+		System.out.println("PrintServer is free again, requeuing jobs...\n");
 
-    }
+	}
 
-    @Override
-    public void run() {
-        System.out.println("PrintServer is ON.\n");
+	@Override
+		public void run() {
+			System.out.println("PrintServer is ON.\n");
 
-        while(this.impressora.isAble()) {
-            if(this.pendingRequests.size() >= this.packetSize && !impressora.isBusy()) {
-                ArrayList<Integer> printingJobs = new ArrayList(10);
+			while(this.impressora.isAble()) {
+				if(this.pendingRequests.size() >= this.packetSize) {
+					ArrayList<Integer> printingJobs = new ArrayList(10);
 
-                for(int i = 0; i < packetSize; i++)
-                    printingJobs.add(this.pendingRequests.remove(0));
+					try {
+						Main.loading.acquire();	
+					} catch (InterruptedException e) {
+						return;
+					}
 
-                this.sendPacket();                
+					for(int i = 0; i < packetSize; i++)
+						printingJobs.add(this.pendingRequests.remove(0));
+					Main.loading.release();
 
-                for(int i = 0; i < packetSize; i++) 
-                    this.pendingRequests.add(printingJobs.remove(0));
-            }
-        }
+					this.sendPacket();                
 
-        System.out.println("TEST");
-    }
+					try {
+						Main.loading.acquire();	
+					} catch (InterruptedException e) {
+						return;
+					}                
+					for(int i = 0; i < packetSize; i++) 
+						this.pendingRequests.add(printingJobs.remove(0));
+					Main.loading.release();
+
+
+				}
+			}
+
+		}
 
 }
