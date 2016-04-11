@@ -88,6 +88,8 @@ public class PrintServer implements Runnable {
                 Main.loading.release();
             }
         }
+        // imprime contador de instancias estatico
+        System.out.println("Contador de instancias estatico: " + this.nOfInstances);
     }
 
 }

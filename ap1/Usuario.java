@@ -4,7 +4,6 @@ public class Usuario implements Runnable{
     public Usuario(int id, PrintServer printServer) {
         this.id = id;
         this.printServer = printServer;
-        this.models = 0;
         printServer.incrementInstances(); // contador de instancias estatico
     }
 
