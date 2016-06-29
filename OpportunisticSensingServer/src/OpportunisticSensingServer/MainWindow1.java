@@ -9,7 +9,7 @@ import javax.swing.JOptionPane;
 
 /**
  *
- * @author Usuário
+ * @author Claudio Gisch e Paulo Lanzarin
  */
 public class MainWindow1 extends javax.swing.JFrame {
 
@@ -168,7 +168,7 @@ public class MainWindow1 extends javax.swing.JFrame {
     }//GEN-LAST:event_helpBtnActionPerformed
 
     private void helpBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_helpBtnMouseClicked
-        JOptionPane.showMessageDialog(null, "Para iniciar o DroidPlayer - Servidor, basta pressionar o botão 'Conectar'.\nSerá informado um número IP que deverá ser inserido no aplicativo quando solicitado um IP.", 
+        JOptionPane.showMessageDialog(null, "Para iniciar o Servidor, basta pressionar o botão 'Conectar'.\nSerá informado um número IP e a Porta que deverão ser inseridos no aplicativo quando solicitado.", 
                 "Ajuda", JOptionPane.PLAIN_MESSAGE);
     }//GEN-LAST:event_helpBtnMouseClicked
     

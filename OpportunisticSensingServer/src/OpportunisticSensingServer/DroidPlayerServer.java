@@ -12,7 +12,7 @@ import javax.swing.UIManager;
 
 /**
  *
- * @author Usuário
+ * @author Claudio Gisch e Paulo Lanzarin
  */
 public class DroidPlayerServer {
 
@@ -24,7 +24,6 @@ public class DroidPlayerServer {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         }catch(Exception e){}
         
-        ControlConfiguration.setDefaultConfiguration();
         MainWindow1 m = new MainWindow1();
 
         m.setVisible(true);

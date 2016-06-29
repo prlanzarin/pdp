@@ -7,7 +7,7 @@ package OpportunisticSensingServer;
 
 /**
  *
- * @author Usuário
+ * @author Claudio Gisch e Paulo Lanzarin
  */
 public class MainWindow2 extends javax.swing.JFrame {
     
