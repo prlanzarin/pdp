@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MicrophoneService extends Service {
     public static final String BROADCAST_ACTION = "pdp_ufrgs.opportunisticsensingprototype.MicrophoneService";
@@ -24,6 +25,8 @@ public class MicrophoneService extends Service {
     double MIC_THRESHOLD = 0;
     Thread runningThread;
     boolean THREAD_RUNNING = false;
+    private static double mEMA = 0.0;
+    static final private double EMA_FILTER = 0.6;
 
     @Override
     public void onCreate() throws SecurityException{
@@ -41,9 +44,15 @@ public class MicrophoneService extends Service {
                 try {
                     while(THREAD_RUNNING) {
                         Thread.sleep(1000);
-                        double db = 20 * Math.log(mRecorder.getMaxAmplitude() / 2700.0);
+                        double db = soundDb();
+                        if(db >= MIC_THRESHOLD) {
+                            Intent retIntent = new Intent(BROADCAST_ACTION);
+                            SensingInfo sensorResult = new SensingInfo(latitude, longitude, null, db,
+                                    SensingInfo.MICROPHONE_TYPE);
+                            retIntent.putExtra("RESULT", sensorResult);
+                            sendBroadcast(retIntent);
+                        }
                         Log.d("MC/DB: ", String.valueOf(db));
-                        Log.d("MC/AM: ", String.valueOf(mRecorder.getMaxAmplitude()));
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -65,7 +74,7 @@ public class MicrophoneService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) throws SecurityException {
         /* gets the mic device threshold form main activity */
-        this.MIC_THRESHOLD = intent.getIntExtra("MIC_THRESHOLD", 1);
+        this.MIC_THRESHOLD = intent.getDoubleExtra("MIC_THRESHOLD", 1);
 
         THREAD_RUNNING = true;
         runningThread.start();
@@ -108,6 +117,16 @@ public class MicrophoneService extends Service {
         else
             return 0;
 
+    }
+
+    public double getAmplitudeEMA() {
+        double amp =  getAmplitude();
+        mEMA = EMA_FILTER * amp + (1.0 - EMA_FILTER) * mEMA;
+        return mEMA;
+    }
+
+    public double soundDb(){
+        return  20 * Math.log10(getAmplitudeEMA());
     }
 
     public class MyLocationListener implements LocationListener

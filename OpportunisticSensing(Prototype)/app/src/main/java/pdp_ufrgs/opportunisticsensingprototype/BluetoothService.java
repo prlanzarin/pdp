@@ -51,7 +51,6 @@ public class BluetoothService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
@@ -67,13 +66,27 @@ public class BluetoothService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
+            /* captures a FOUND bluetooth broadcast -> new device */
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                BluetoothDevice device = intent
-                        .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                deviceList.add(device.getName() + "\n" + device.getAddress());
-                Log.d("BS/FOUND: ", device.getName() + "\n" + device.getAddress());
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                String deviceName = device.getName() + "\n" + device.getAddress();
+                boolean newDv = true;
+
+                /* checks if device was already mapped */
+                for(String d : deviceList) {
+                    if(d.equals(deviceName)) {
+                        newDv = false;
+                        continue;
+                    }
+                }
+
+                if(newDv) {
+                    deviceList.add(device.getName() + "\n" + device.getAddress());
+                }
+                Log.d("BS/LIST: ", deviceList.toString());
 
             }
+            /* captures a DISCOVERY_FINISHED broadcast -> end of search period (12s) */
             else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 Log.d("BS/NUMBER OF: ", String.valueOf(deviceList.size()));
 

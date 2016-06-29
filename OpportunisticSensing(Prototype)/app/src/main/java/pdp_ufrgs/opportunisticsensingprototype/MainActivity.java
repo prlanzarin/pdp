@@ -16,12 +16,14 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    String IP;
+    int PORT;
     private EditText btDevices, micIntensity, ipField, portField;
     private Switch btEnabled, micEnabled;
     private ArrayList<String> deviceList = new ArrayList<String>();
-    double latitude, longitude = 0;
+    double latitude, longitude, MIC_INTENSITY = 0.0;
     private Button connectButton;
-    private int BLUETOOTH_DEVICES = 1, MIC_INTENSITY = 0;
+    private int BLUETOOTH_DEVICES = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onConnect(View view) {
         boolean BLUETOOTH_ENABLED, MIC_ENABLED;
-        String ip, tmp;
-        int port;
+        String tmp;
 
         /* sensor parameters */
         tmp = btDevices.getText().toString();
@@ -59,15 +60,15 @@ public class MainActivity extends AppCompatActivity {
             this.micIntensity.setError("Necessário");
             return;
         }
-        this.MIC_INTENSITY = Integer.parseInt(tmp);
+        this.MIC_INTENSITY = Double.parseDouble(tmp);
 
         /* switches */
         BLUETOOTH_ENABLED = this.btEnabled.isChecked();
         MIC_ENABLED = this.micEnabled.isChecked();
 
         /* IP and port fields */
-        ip = this.ipField.getText().toString();
-        if(empty(ip)) {
+        IP = this.ipField.getText().toString();
+        if(empty(IP)) {
             this.ipField.setError("Endereço IP é necessário");
             return;
         }
@@ -77,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
             this.portField.setError("Porta é necessária");
             return;
         }
-        port = Integer.parseInt(tmp);
+        PORT = Integer.parseInt(tmp);
 
         /* fire up the sensor services */
         this.setSensingService(BLUETOOTH_ENABLED, MIC_ENABLED);
@@ -85,14 +86,18 @@ public class MainActivity extends AppCompatActivity {
 
     /* Start sensor services  */
     public boolean setSensingService(boolean bt, boolean mic) {
+        // starts connection thread. It captures the sensors' broadcasts and sends them to server
         Thread connectionThread = new Thread() {
             public void run() {
                 Intent serviceIntent = new Intent(getApplicationContext(), ConnectionService.class);
+                serviceIntent.putExtra("IP", IP);
+                serviceIntent.putExtra("PORT", PORT);
                 startService(serviceIntent);
             }
         };
         connectionThread.start();
 
+        // bluetooth sensor service
         if(bt) {
             Thread btThread = new Thread() {
                 public void run() {
@@ -105,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
             btThread.start();
         }
 
+        // microphone sensor service
         if(mic) {
             Thread micThread = new Thread() {
                 public void run() {
