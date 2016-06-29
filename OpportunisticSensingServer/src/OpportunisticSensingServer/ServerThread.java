@@ -11,7 +11,7 @@ import java.io.ObjectInputStream;
 import java.awt.Robot;
 /**
  *
- * @author Usuário
+ * @author Claudio Gisch e Paulo Lanzarin
  */
 public class ServerThread extends Thread {
     
@@ -60,76 +60,46 @@ public class ServerThread extends Thread {
     @Override
     public void run()
     {
-        ControlMessage message = new ControlMessage();
-        message.setCode(Constants.INITIATE_COMMUNICATION_CODE);
+        SensingInfo message;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         this.window.setStatusText("Conectado");
         try{
             out = new ObjectOutputStream(this.clientSocket.getOutputStream());
-            out.writeObject(message.toString());
         }catch(Exception e)
         {
             this.window.appendTextInfoArea(e.toString());
         }
         
-        Thread ct = new Thread(new CommandWriter());
+        Thread ct = new Thread();
         ct.start();
         
         try{
-            in = new ObjectInputStream(this.clientSocket.getInputStream());
-            ControlMessage m = new ControlMessage();
+            in = new ObjectInputStream(this.clientSocket.getInputStream()); 
+            SensingInfo m;
             
             while(!this.window.isConnectionCanceled())
             {
-                /*Receive message*/
-                m.fromString((String)in.readObject());
-                this.window.appendTextInfoArea(m.toReadableString());
-                
-                if(m.getCode() == Constants.END_COMMUNICATION_CODE)
+                /*Receive message*/  
+                m = (SensingInfo)in.readObject();
+                if(m.type == m.MICROPHONE_TYPE)
                 {
-                     this.window.setStatusText("Conexão cancelada pelo controle");
-                     this.window.setButtonText("Fechar servidor");
-                     this.serverSocket.close();
-                     cancel = true;
-                     return;
+                     this.window.appendTextInfoArea("Localização:");
+                     this.window.appendTextInfoArea("Latitude - "+m.latitude);
+                     this.window.appendTextInfoArea("Longitude - "+m.longitude);
+                     this.window.appendTextInfoArea("Amplitude de som detectado: "+m.longitude);
+                     this.window.appendTextInfoArea("\n\n");
                 }
-                
-                switch(m.getAction())
+                else
                 {
-                    case Constants.MOTION_RIGHT:
-                        commands[Constants.MOTION_RIGHT] = !commands[Constants.MOTION_RIGHT];
-                    break;
-                    case Constants.MOTION_LEFT:
-                        commands[Constants.MOTION_LEFT] = !commands[Constants.MOTION_LEFT];                   
-                    break;
-                    case Constants.MOVEMENT_RIGHT:
-                        commands[Constants.MOVEMENT_RIGHT] = !commands[Constants.MOVEMENT_RIGHT];
-                    break;
-                    case Constants.MOVEMENT_LEFT:
-                        commands[Constants.MOVEMENT_LEFT] = !commands[Constants.MOVEMENT_LEFT];
-                    break;
-                    case Constants.MOVEMENT_DOWN:
-                        commands[Constants.MOVEMENT_DOWN] = !commands[Constants.MOVEMENT_DOWN];
-                    break;
-                    case Constants.MOVEMENT_UP:
-                        commands[Constants.MOVEMENT_UP] = !commands[Constants.MOVEMENT_UP];
-                    break;
-                    case Constants.BTN_RIGHT:
-                        commands[Constants.BTN_RIGHT] = !commands[Constants.BTN_RIGHT];
-                    break;
-                    case Constants.BTN_LEFT:
-                        commands[Constants.BTN_LEFT] = !commands[Constants.BTN_LEFT];
-                    break;
-                    case Constants.BTN_UP:
-                        commands[Constants.BTN_UP] = !commands[Constants.BTN_UP];
-                    break;
-                    case Constants.BTN_DOWN:
-                        commands[Constants.BTN_DOWN] = !commands[Constants.BTN_DOWN];
-                    break;
-                    case Constants.BTN_MENU:
-                        commands[Constants.BTN_MENU] = !commands[Constants.BTN_MENU];
-                    break;
+                    this.window.appendTextInfoArea("Localização:");
+                    this.window.appendTextInfoArea("Latitude - "+m.latitude);
+                    this.window.appendTextInfoArea("Longitude - "+m.longitude);
+                    this.window.appendTextInfoArea("Identificação dos dispositivos bluetooth encontrados:");
+                    for(String id : m.deviceList){
+                        this.window.appendTextInfoArea(id);
+                    }
+                    this.window.appendTextInfoArea("\n\n");
                 }
             }
             
@@ -165,34 +135,6 @@ public class ServerThread extends Thread {
     public MainWindow2 getWindow()
     {
         return this.window;
-    }
-    
-    private class CommandWriter implements Runnable {
-        @Override
-        public void run()
-        {
-            try{
-            Robot r = new Robot();
-            r.setAutoDelay(1);
-            
-            while(!cancel)
-            {
-                for(int i=0;i<12;i++){
-                    if(commands[i]){
-                        r.keyPress(ControlConfiguration.getKey(i));
-                        isPressed[i] = true;
-                    }
-                }
-                
-                for(int i=0;i<12;i++){
-                    if(!commands[i] && isPressed[i]){
-                        r.keyRelease(ControlConfiguration.getKey(i));
-                        isPressed[i] = false;
-                    }
-                }  
-            }
-            }catch(Exception e){System.out.println(e.toString());e.printStackTrace();} 
-        }
     }
     
 }

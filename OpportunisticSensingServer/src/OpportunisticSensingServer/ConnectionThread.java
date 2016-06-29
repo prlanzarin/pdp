@@ -11,7 +11,7 @@ import javax.swing.JOptionPane;
 
 /**
  *
- * @author Usuário
+ * @author Claudio Gisch e Paulo Lanzarin
  */
 public class ConnectionThread extends Thread{
     
@@ -40,8 +40,8 @@ public class ConnectionThread extends Thread{
             st = new ServerThread(Constants.SERVER_PORT_NUMBER);
             this.informationArea.setText(this.informationArea.getText()+"\nServidor inicializado...\nServidor conectado a porta "+st.getServerPort());
             this.informationArea.setText(this.informationArea.getText()+"\nAguardo conexão do cliente Android...");
-            this.informationArea.setText(this.informationArea.getText()+"\nEndereço IP para conexão direta:  "+InetAddress.getLocalHost().getHostAddress());
-            JOptionPane.showMessageDialog(null, "Informe o seguinte IP no aplicativo:\n\tIP: "+InetAddress.getLocalHost().getHostAddress(), 
+            this.informationArea.setText(this.informationArea.getText()+"\nEndereço IP e Porta para conexão direta:  "+InetAddress.getLocalHost().getHostAddress()+":"+Constants.SERVER_PORT_NUMBER);
+            JOptionPane.showMessageDialog(null, "Informe o seguinte IP e Porta no aplicativo:\n\tIP: "+InetAddress.getLocalHost().getHostAddress() + "\nPorta: "+Constants.SERVER_PORT_NUMBER, 
                 "IP do Servidor", JOptionPane.PLAIN_MESSAGE);
             st.acceptClient();
             this.informationArea.setText(this.informationArea.getText()+"\nConexão com Android estabelecida ...\nAndoird conectado em "+st.getClientAddress());

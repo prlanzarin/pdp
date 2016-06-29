@@ -7,7 +7,7 @@ package OpportunisticSensingServer;
 
 /**
  *
- * @author Usuário
+ * @author Claudio Gisch e Paulo Lanzarin
  */
 
 public class Constants {
@@ -21,27 +21,6 @@ public class Constants {
     public static final int END_COMMUNICATION_CODE = 0;
     public static final int ACTION_SENT_CODE = 2;
     
-    public static final String CODE_STRINGS[] = {"Fim de comunicação", "Início de comunicação", "Ação enviada"};
-      
-    public static final int MOTION_RIGHT = 1;
-    public static final int MOTION_LEFT = 2;
-    
-    public static final int MOVEMENT_RIGHT = 3;
-    public static final int MOVEMENT_LEFT = 4;
-    public static final int MOVEMENT_UP = 5;
-    public static final int MOVEMENT_DOWN = 6;
-    
-    public static final int BTN_RIGHT = 7;
-    public static final int BTN_LEFT = 8;
-    public static final int BTN_UP = 9;
-    public static final int BTN_DOWN = 10;
-    static final int BTN_MENU = 11;
-        
-    public static final String ACTION_STRINGS[] = {"-", "Movimento Direita", "Movimento Esquerda", "Seta Direita",
-                                                    "Seta Esquerda", "Seta Cima", "Seta Baixo", 
-                                                    "Botão Direito", "Botão Esquerdo", "Botão Cima", "Botão Baixo",
-                                                    "Menu"
-                                                    };
-    
+    public static final String CODE_STRINGS[] = {"Fim de comunicação", "Início de comunicação", "Ação enviada"};  
         
 }
