@@ -23,24 +23,6 @@ public class MainActivity extends AppCompatActivity {
     private Button connectButton;
     private int BLUETOOTH_DEVICES = 1, MIC_INTENSITY = 0;
 
-    private BroadcastReceiver bcReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Log.d("BROADCAST: ", "from" + action);
-
-            if (action.equals(BluetoothService.BROADCAST_ACTION)) {
-                deviceList = intent.getStringArrayListExtra("DEVICE_LIST");
-                latitude = intent.getDoubleExtra("LATITUDE", 0.0);
-                longitude = intent.getDoubleExtra("LONGITUDE", 0.0);
-                Log.d("BCAST RECV: ", deviceList.toString() + " " + latitude + ", " + longitude);
-
-            } else if (action.equals(MicrophoneService.BROADCAST_ACTION)) {
-
-            }
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,18 +79,24 @@ public class MainActivity extends AppCompatActivity {
         }
         port = Integer.parseInt(tmp);
 
-        /* connect to server */
-        // TODO
-
         /* fire up the sensor services */
         this.setSensingService(BLUETOOTH_ENABLED, MIC_ENABLED);
     }
 
     /* Start sensor services  */
     public boolean setSensingService(boolean bt, boolean mic) {
+        Thread connectionThread = new Thread() {
+            public void run() {
+                Intent serviceIntent = new Intent(getApplicationContext(), ConnectionService.class);
+                startService(serviceIntent);
+            }
+        };
+        connectionThread.start();
+
         if(bt) {
             Thread btThread = new Thread() {
                 public void run() {
+                    Log.d("MAIN/BT: ", "STARTING SERVICE");
                     Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
                     serviceIntent.putExtra("BT_THRESHOLD", BLUETOOTH_DEVICES);
                     startService(serviceIntent);
@@ -120,7 +108,8 @@ public class MainActivity extends AppCompatActivity {
         if(mic) {
             Thread micThread = new Thread() {
                 public void run() {
-                    Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+                    Log.d("MAIN/MIC: ", "STARTING SERVICE");
+                    Intent serviceIntent = new Intent(getApplicationContext(), MicrophoneService.class);
                     serviceIntent.putExtra("MIC_THRESHOLD", MIC_INTENSITY);
                     startService(serviceIntent);
                 }
@@ -137,16 +126,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothService.BROADCAST_ACTION);
-        filter.addAction(MicrophoneService.BROADCAST_ACTION);
-        registerReceiver(this.bcReceiver, filter);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        unregisterReceiver(this.bcReceiver);
         super.onPause();
     }
 

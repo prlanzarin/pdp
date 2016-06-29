@@ -8,6 +8,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -20,14 +21,56 @@ public class MicrophoneService extends Service {
     private LocationManager locationManager = null;
     private LocationListener locationListener = null;
     double latitude, longitude = 0;
-
+    double MIC_THRESHOLD = 0;
+    Thread runningThread;
+    boolean THREAD_RUNNING = false;
 
     @Override
-    public void onCreate() throws SecurityException {
+    public void onCreate() throws SecurityException{
         super.onCreate();
+
+        Log.d("MC/FL: ", "MIC START");
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new MyLocationListener();
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, locationListener);
+
+        runningThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while(THREAD_RUNNING) {
+                        Thread.sleep(1000);
+                        double db = 20 * Math.log(mRecorder.getMaxAmplitude() / 2700.0);
+                        Log.d("MC/DB: ", String.valueOf(db));
+                        Log.d("MC/AM: ", String.valueOf(mRecorder.getMaxAmplitude()));
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        startRecorder();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        THREAD_RUNNING = false;
+        stopRecorder();
+    }
+
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) throws SecurityException {
+        /* gets the mic device threshold form main activity */
+        this.MIC_THRESHOLD = intent.getIntExtra("MIC_THRESHOLD", 1);
+
+        THREAD_RUNNING = true;
+        runningThread.start();
+
+        return START_STICKY;
     }
 
     @Override

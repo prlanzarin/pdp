@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class BluetoothService extends Service {
     public static final String BROADCAST_ACTION = "pdp_ufrgs.opportunisticsensingprototype.BluetoothService";
-    private int BT_THRESHOLD = 3;
+    private int BT_THRESHOLD = 1;
     private LocationManager locationManager = null;
     private LocationListener locationListener = null;
     private BluetoothAdapter btAdapter;
@@ -29,7 +29,7 @@ public class BluetoothService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) throws SecurityException {
         /* gets the bluetooth device threshold form main activity */
-        this.BT_THRESHOLD = intent.getIntExtra("BT_THRESHOLD", 3);
+        this.BT_THRESHOLD = intent.getIntExtra("BT_THRESHOLD", 1);
 
         /* starts location listener */
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -41,7 +41,9 @@ public class BluetoothService extends Service {
         btAdapter.startDiscovery();
 
         /* broadcast listener to detect nearby bluetooth devices */
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         registerReceiver(btReceiver, filter);
 
         return START_STICKY;
@@ -64,21 +66,26 @@ public class BluetoothService extends Service {
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent
                         .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 deviceList.add(device.getName() + "\n" + device.getAddress());
                 Log.d("BS/FOUND: ", device.getName() + "\n" + device.getAddress());
+
+            }
+            else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 Log.d("BS/NUMBER OF: ", String.valueOf(deviceList.size()));
 
                 if(deviceList.size() >= BT_THRESHOLD) {
                     Intent retIntent = new Intent(BROADCAST_ACTION);
-                    retIntent.putStringArrayListExtra("DEVICE_LIST", deviceList);
-                    retIntent.putExtra("LATITUDE", latitude);
-                    retIntent.putExtra("LONGITUDE", longitude);
+                    SensingInfo sensorResult = new SensingInfo(latitude, longitude, deviceList, 0.0,
+                                                                SensingInfo.BLUETOOTH_TYPE);
+                    retIntent.putExtra("RESULT", sensorResult);
                     sendBroadcast(retIntent);
-                    deviceList.clear();
+                    deviceList = new ArrayList<String>();
                 }
+                btAdapter.startDiscovery();
             }
         }
     };
