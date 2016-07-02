@@ -18,6 +18,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -86,8 +89,14 @@ public class ConnectionService extends Service {
                 SensingInfo sensorResult = (SensingInfo) intent.getSerializableExtra("RESULT");
                 Log.d("BCAST RECV: ", sensorResult.deviceList.toString() + " "
                         + sensorResult.latitude + ", " + sensorResult.longitude);
-                if(socketIsConnected)
-                    try{SocketHolder.writeMessage(sensorResult);}catch(Exception e){System.out.println(e.toString());}
+                if(socketIsConnected) {
+                    try {
+                        SocketHolder.writeMessage(sensorResult);
+                    } catch (Exception e) {
+                        System.out.println(e.toString());
+                    }
+                    appendLog(sensorResult.toString());
+                }
 
             }
             /* if service received a microphone sensor result broadcast, sends it to server */
@@ -95,8 +104,14 @@ public class ConnectionService extends Service {
                 SensingInfo sensorResult = (SensingInfo) intent.getSerializableExtra("RESULT");
                 Log.d("BCAST RECV: ", sensorResult.micIntensity + " "
                         + sensorResult.latitude + ", " + sensorResult.longitude);
-                if(socketIsConnected)
-                    try{SocketHolder.writeMessage(sensorResult);}catch(Exception e){System.out.println(e.toString());}
+                if(socketIsConnected) {
+                    try {
+                        SocketHolder.writeMessage(sensorResult);
+                    } catch (Exception e) {
+                        System.out.println(e.toString());
+                    }
+                    appendLog(sensorResult.toString());
+                }
             }
         }
     };
@@ -134,6 +149,36 @@ public class ConnectionService extends Service {
         try {
             SocketHolder.setSocket(socket);
         }catch (Exception e) {}
+    }
+
+    public void appendLog(String text)
+    {
+        File logFile = new File("sdcard/log.txt");
+        if (!logFile.exists())
+        {
+            try
+            {
+                logFile.createNewFile();
+            }
+            catch (IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        try
+        {
+            //BufferedWriter for performance, true to set append to file flag
+            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
+            buf.append(text);
+            buf.newLine();
+            buf.close();
+        }
+        catch (IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }

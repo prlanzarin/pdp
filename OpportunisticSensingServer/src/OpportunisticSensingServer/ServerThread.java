@@ -82,7 +82,7 @@ public class ServerThread extends Thread {
             {
                 /*Receive message*/  
                 m = (SensingInfo)in.readObject();
-                if(m.type == m.MICROPHONE_TYPE)
+                if(m.type.equals(m.MICROPHONE_TYPE))
                 {
                      this.window.appendTextInfoArea("Localização:");
                      this.window.appendTextInfoArea("Latitude - "+m.latitude);
@@ -90,7 +90,7 @@ public class ServerThread extends Thread {
                      this.window.appendTextInfoArea("Amplitude de som detectado: "+m.longitude);
                      this.window.appendTextInfoArea("\n\n");
                 }
-                else
+                else if(m.type.equals(m.BLUETOOTH_TYPE))
                 {
                     this.window.appendTextInfoArea("Localização:");
                     this.window.appendTextInfoArea("Latitude - "+m.latitude);
@@ -100,6 +100,9 @@ public class ServerThread extends Thread {
                         this.window.appendTextInfoArea(id);
                     }
                     this.window.appendTextInfoArea("\n\n");
+                }
+                else {
+                    //closes connection
                 }
             }
             

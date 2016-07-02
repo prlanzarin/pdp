@@ -20,4 +20,14 @@ public class SensingInfo implements Serializable {
         this.micIntensity = mic;
         this.type = type;
     }
+
+    public String toString() {
+        if(type.equals(BLUETOOTH_TYPE)) {
+            return ("BLUETOOTH -> LAT " + this.latitude + "LONG " + this.longitude + " LISTA DE DISPOSITIVOS " + deviceList.toString());
+        }
+        else if (type.equals(MICROPHONE_TYPE)) {
+            return ("MIC -> LAT " + this.latitude + "LONG " + this.longitude + " INTENSIDADE " + micIntensity);
+        }
+        else return "";
+    }
 }
